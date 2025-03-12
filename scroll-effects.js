@@ -4,6 +4,8 @@
 function initCandlelightEffect() {
   const edges = document.querySelectorAll('.scroll-edge-top, .scroll-edge-bottom');
   
+  if (!edges.length) return; // Exit if elements don't exist
+  
   setInterval(() => {
     // Random shadow intensity for flickering effect
     const shadowIntensity = Math.random() * 5 + 10;
@@ -18,6 +20,8 @@ function initCandlelightEffect() {
 // Scroll unrolling animation
 function initScrollUnrolling() {
   const scrollContent = document.querySelector('.scroll-content');
+  
+  if (!scrollContent || typeof gsap === 'undefined') return; // Exit if element doesn't exist or gsap isn't available
   
   // Set initial state (rolled up)
   gsap.set(scrollContent, { height: 0, opacity: 0 });
@@ -36,18 +40,11 @@ function initScrollUnrolling() {
   });
 }
 
-// Initialize all scroll effects when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  // Add small delay to let page elements load
-  setTimeout(() => {
-    initCandlelightEffect();
-    initScrollUnrolling();
-  }, 300);
-});
-
 // Wax seal button effect
 function initWaxSealButtons() {
   const buttons = document.querySelectorAll('button, .btn-logout, .nav-link, .tab-btn');
+  
+  if (!buttons.length || typeof gsap === 'undefined') return; // Exit if elements don't exist or gsap isn't available
   
   buttons.forEach(button => {
     button.addEventListener('mouseenter', () => {
@@ -68,7 +65,19 @@ function initWaxSealButtons() {
   });
 }
 
-// Call after DOM content is loaded
+// Initialize all scroll effects when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  initWaxSealButtons();
+  // Check if GSAP is available
+  if (typeof gsap !== 'undefined') {
+    // Add small delay to let page elements load
+    setTimeout(() => {
+      initCandlelightEffect();
+      initScrollUnrolling();
+      initWaxSealButtons();
+    }, 300);
+  } else {
+    console.warn('GSAP library not found. Some animations will not work.');
+    // Still try to run the candlelight effect which doesn't need GSAP
+    initCandlelightEffect();
+  }
 });
