@@ -1,83 +1,133 @@
-// Medieval scroll effects
+/**
+ * Minimalist animations and effects
+ * 
+ * This file provides subtle animations to enhance the user experience
+ * without being distracting. It uses GSAP for smooth transitions.
+ * 
+ * @requires GSAP library
+ * @author Your Name
+ * @version 1.0.0
+ */
 
-// Flickering candlelight effect on parchment edges
-function initCandlelightEffect() {
-  const edges = document.querySelectorAll('.scroll-edge-top, .scroll-edge-bottom');
+/**
+ * Initialize fade-in animations for sections
+ * Creates a subtle entrance animation when sections are displayed
+ */
+function initFadeInEffects() {
+  if (typeof gsap === 'undefined') return;
   
-  if (!edges.length) return; // Exit if elements don't exist
+  const sections = document.querySelectorAll('.section');
   
-  setInterval(() => {
-    // Random shadow intensity for flickering effect
-    const shadowIntensity = Math.random() * 5 + 10;
-    const shadowColor = `rgba(255, 150, 50, ${Math.random() * 0.3 + 0.3})`;
-    
-    edges.forEach(edge => {
-      edge.style.boxShadow = `0 0 ${shadowIntensity}px ${shadowColor}`;
-    });
-  }, 100);
-}
-
-// Scroll unrolling animation
-function initScrollUnrolling() {
-  const scrollContent = document.querySelector('.scroll-content');
+  // Set initial state
+  gsap.set(sections, { opacity: 0, y: 20 });
   
-  if (!scrollContent || typeof gsap === 'undefined') return; // Exit if element doesn't exist or gsap isn't available
-  
-  // Set initial state (rolled up)
-  gsap.set(scrollContent, { height: 0, opacity: 0 });
-  
-  // Animate unrolling
-  gsap.to(scrollContent, {
-    height: "auto",
+  // Animate the active section
+  gsap.to('.section.active', {
     opacity: 1,
-    duration: 1.2,
-    ease: "power2.out",
-    onComplete: () => {
-      // Allow normal scrolling after animation
-      scrollContent.style.height = 'auto';
-      scrollContent.style.overflow = 'visible';
-    }
+    y: 0,
+    duration: 0.6,
+    ease: "power2.out"
   });
 }
 
-// Wax seal button effect
-function initWaxSealButtons() {
-  const buttons = document.querySelectorAll('button, .btn-logout, .nav-link, .tab-btn');
+/**
+ * Initialize subtle hover effects for interactive elements
+ * This improves the perceived responsiveness of the interface
+ */
+function initHoverEffects() {
+  if (typeof gsap === 'undefined') return;
   
-  if (!buttons.length || typeof gsap === 'undefined') return; // Exit if elements don't exist or gsap isn't available
+  // Button hover effects
+  const buttons = document.querySelectorAll('button, .btn-logout, .nav-link:not(.active)');
   
   buttons.forEach(button => {
     button.addEventListener('mouseenter', () => {
       gsap.to(button, {
-        boxShadow: '0 0 15px rgba(255, 160, 60, 0.7)',
-        scale: 1.05,
-        duration: 0.3
+        y: -2,
+        duration: 0.2
       });
     });
     
     button.addEventListener('mouseleave', () => {
       gsap.to(button, {
-        boxShadow: '0 0 0px rgba(255, 160, 60, 0)',
-        scale: 1,
+        y: 0,
+        duration: 0.2
+      });
+    });
+  });
+  
+  // Card hover effects
+  const sections = document.querySelectorAll('.section');
+  
+  sections.forEach(section => {
+    section.addEventListener('mouseenter', () => {
+      gsap.to(section, {
+        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.08)',
+        duration: 0.3
+      });
+    });
+    
+    section.addEventListener('mouseleave', () => {
+      gsap.to(section, {
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
         duration: 0.3
       });
     });
   });
 }
 
-// Initialize all scroll effects when DOM is loaded
+/**
+ * Set up smooth transitions between different sections
+ * This creates a more polished feel when navigating the app
+ */
+function setupSectionTransitions() {
+  if (typeof gsap === 'undefined') return;
+  
+  const navLinks = document.querySelectorAll('.nav-link');
+  
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      // Original navigation functionality is in script.js
+      // This just adds animations to the transitions
+      
+      const targetSectionId = link.getAttribute('data-section');
+      
+      // Fade out all sections
+      gsap.to('.section.active', {
+        opacity: 0,
+        y: 20,
+        duration: 0.3,
+        onComplete: () => {
+          // The class changes happen in the original event handler
+          // After classes are updated, fade in the new section
+          setTimeout(() => {
+            gsap.to(`#${targetSectionId}`, {
+              opacity: 1,
+              y: 0,
+              duration: 0.6,
+              ease: "power2.out"
+            });
+          }, 50);
+        }
+      });
+    });
+  });
+}
+
+/**
+ * Initialize all visual effects when DOM is loaded
+ * This is the main entry point for all animations
+ */
 document.addEventListener('DOMContentLoaded', () => {
   // Check if GSAP is available
   if (typeof gsap !== 'undefined') {
     // Add small delay to let page elements load
     setTimeout(() => {
-      initCandlelightEffect();
-      initScrollUnrolling();
-      initWaxSealButtons();
+      initFadeInEffects();
+      initHoverEffects();
+      setupSectionTransitions();
     }, 300);
   } else {
-    console.warn('GSAP library not found. Some animations will not work.');
-    // Still try to run the candlelight effect which doesn't need GSAP
-    initCandlelightEffect();
+    console.warn('GSAP library not found. Animations will not work.');
   }
 });

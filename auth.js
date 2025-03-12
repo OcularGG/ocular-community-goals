@@ -1,10 +1,26 @@
-// User Authentication Module
+/**
+ * User Authentication Module
+ * 
+ * This module handles user authentication for the Albion Online Goal Tracker.
+ * It provides functionality for user registration, login, and access control.
+ * 
+ * Note: This uses localStorage for persistence, which is acceptable for a simple
+ * application but would not be secure for a production environment.
+ * 
+ * @author Your Name
+ * @version 1.0.0
+ */
 
-// User storage
+// User storage - holds all registered users
 let users = [];
+
+// Current logged-in user
 let currentUser = null;
 
-// Initialize the auth system
+/**
+ * Initialize the authentication system
+ * This loads existing users or creates a default admin account
+ */
 function initAuth() {
     // Load any existing users from localStorage
     const savedUsers = localStorage.getItem('albionUsers');
@@ -32,12 +48,21 @@ function initAuth() {
     }
 }
 
-// Save users to localStorage
+/**
+ * Save users array to localStorage
+ */
 function saveUsers() {
     localStorage.setItem('albionUsers', JSON.stringify(users));
 }
 
-// Register a new user
+/**
+ * Register a new user
+ * 
+ * @param {string} username - The desired username
+ * @param {string} password - The user's password
+ * @param {boolean} isAdmin - Whether the user should have admin privileges
+ * @returns {Object} Object with success flag and message
+ */
 function registerUser(username, password, isAdmin = false) {
     // Check if username already exists
     if (users.some(user => user.username === username)) {
@@ -52,7 +77,13 @@ function registerUser(username, password, isAdmin = false) {
     return { success: true, message: 'Registration successful!' };
 }
 
-// Login user
+/**
+ * Login a user with the provided credentials
+ * 
+ * @param {string} username - The username to check
+ * @param {string} password - The password to verify
+ * @returns {Object} Object containing success flag and user data or error message
+ */
 function loginUser(username, password) {
     const user = users.find(u => u.username === username && u.password === password);
     
@@ -65,18 +96,28 @@ function loginUser(username, password) {
     }
 }
 
-// Logout user
+/**
+ * Log out the current user
+ * Clears user data from memory and localStorage
+ */
 function logoutUser() {
     currentUser = null;
     localStorage.removeItem('currentUser');
 }
 
-// Check if user is logged in and is an admin
+/**
+ * Check if the current user has admin privileges
+ * 
+ * @returns {boolean} True if the current user is an admin
+ */
 function isAdmin() {
     return currentUser && currentUser.isAdmin;
 }
 
-// Update UI based on authentication state
+/**
+ * Update UI based on authentication state
+ * Shows/hides elements based on login status and permissions
+ */
 function updateUIForLoggedInUser() {
     const authContainer = document.getElementById('auth-container');
     const mainContent = document.getElementById('main-content');
@@ -118,13 +159,19 @@ function updateUIForLoggedInUser() {
     }
 }
 
-// Show login form
+/**
+ * Show login form
+ * Hides registration form and displays login form
+ */
 function showLoginForm() {
     document.getElementById('login-form').style.display = 'block';
     document.getElementById('register-form').style.display = 'none';
 }
 
-// Show registration form
+/**
+ * Show registration form
+ * Hides login form and displays registration form
+ */
 function showRegisterForm() {
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'block';

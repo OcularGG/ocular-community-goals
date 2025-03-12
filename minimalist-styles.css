@@ -1,0 +1,273 @@
+/* Minimalist black and white with sapphire accents */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Base styles */
+body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #111827;
+  background-color: #ffffff;
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #111827;
+}
+
+h2 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+h3 {
+  font-size: 1.25rem;
+  margin: 1rem 0;
+}
+
+/* Header and Navigation */
+header {
+  background: #111827;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link {
+  color: #f9fafb;
+  font-weight: 500;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #0d8be8;
+  transition: width 0.3s;
+}
+
+.nav-link:hover::after, .nav-link.active::after {
+  width: 100%;
+}
+
+.nav-link.active {
+  color: #0d8be8;
+}
+
+/* Buttons */
+button, .btn-logout, .tab-btn {
+  font-weight: 500;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+}
+
+button:hover, .btn-logout:hover, .tab-btn:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+button[type="submit"], .primary-btn {
+  background-color: #0d8be8;
+  color: white;
+  border: none;
+}
+
+button[type="submit"]:hover, .primary-btn:hover {
+  background-color: #0070cc;
+}
+
+.btn-logout {
+  background-color: transparent;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.btn-logout:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Timeframe Tabs */
+.timeframe-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+  background-color: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.5rem 0;
+  margin-right: 1rem;
+}
+
+.tab-btn:hover {
+  background-color: transparent;
+  border-bottom-color: #d1d5db;
+}
+
+.tab-btn.active {
+  border-bottom-color: #0d8be8;
+  color: #0d8be8;
+  font-weight: 600;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1rem 0;
+}
+
+table th, table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+table th {
+  font-weight: 600;
+  color: #4b5563;
+  position: sticky;
+  top: 0;
+  background-color: #f0f7ff;
+  z-index: 10;
+}
+
+table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Form Elements */
+input[type="text"], input[type="date"], 
+input[type="password"], select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus, input[type="date"]:focus, 
+input[type="password"]:focus, select:focus {
+  border-color: #0d8be8;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(13, 139, 232, 0.1);
+}
+
+/* Card styles */
+.section {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s;
+}
+
+.section:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Action buttons */
+.delete-btn {
+  color: #ef4444;
+  background-color: transparent;
+  border: none;
+  padding: 0.25rem 0.5rem;
+}
+
+.delete-btn:hover {
+  background-color: #fef2f2;
+}
+
+/* Add these styles for tags */
+
+/* Tag styles */
+.goal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.goal-tag {
+  font-size: 0.75rem;
+  background-color: #e0f0fe;
+  color: #0070cc;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #bae0fd;
+  white-space: nowrap;
+}
+
+.goal-tag:hover {
+  background-color: #0d8be8;
+  color: white;
+}
+
+/* Tag filter styles */
+.tag-filter {
+  transition: background-color 0.3s;
+}
+
+.section.filtered .tag-filter {
+  background-color: #f0f7ff; /* Subtle highlight for active filter */
+  border-left: 3px solid #0d8be8;
+}
+
+.tag-filter-clear {
+  border-radius: 0.25rem;
+}
+
+.tag-filter-clear:hover {
+  background-color: #e5e7eb;
+}
+
+#community-filter-indicator,
+#ocular-filter-indicator,
+#university-filter-indicator,
+#vanguard-filter-indicator {
+  padding: 0.25rem 0;
+  font-weight: 500;
+}
+
+/* Goal row animations for filtering */
+.goal-row {
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.goal-row.hidden {
+  display: none;
+}
+
+/* Improve focus styles for accessibility */
+.tag-filter-input:focus {
+  border-color: #0d8be8;
+  box-shadow: 0 0 0 3px rgba(13, 139, 232, 0.2);
+  outline: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tab-btn {
+    margin-right: 0.5rem;
+  }
+}
