@@ -8,7 +8,7 @@
  * application but would not be secure for a production environment.
  * 
  * @author Your Name
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 // User storage - holds all registered users
@@ -22,37 +22,84 @@ let currentUser = null;
  * This loads existing users or creates a default admin account
  */
 function initAuth() {
-    // Load any existing users from localStorage
-    const savedUsers = localStorage.getItem('albionUsers');
-    if (savedUsers) {
-        users = JSON.parse(savedUsers);
-    } else {
-        // Create a default admin account if no users exist
+    try {
+        // Load any existing users from localStorage
+        const savedUsers = localStorage.getItem('albionUsers');
+        if (savedUsers) {
+            users = JSON.parse(savedUsers);
+            console.log(`Loaded ${users.length} users from localStorage`);
+        } else {
+            // Create a default admin account if no users exist
+            users = [
+                {
+                    username: 'admin',
+                    password: 'admin123', // In a real app, use hashed passwords
+                    isAdmin: true
+                }
+            ];
+            saveUsers();
+            console.log('Created default admin account');
+        }
+        
+        // Check if user is already logged in (from previous session)
+        const loggedInUser = localStorage.getItem('currentUser');
+        if (loggedInUser) {
+            try {
+                currentUser = JSON.parse(loggedInUser);
+                console.log(`User ${currentUser.username} logged in from previous session`);
+                updateUIForLoggedInUser();
+            } catch (e) {
+                console.error('Failed to parse current user data:', e);
+                localStorage.removeItem('currentUser');
+                showLoginForm();
+            }
+        } else {
+            showLoginForm();
+        }
+    } catch (err) {
+        console.error('Error initializing authentication system:', err);
+        // Fallback to a clean state
         users = [
             {
                 username: 'admin',
-                password: 'admin123', // In a real app, use hashed passwords
+                password: 'admin123',
                 isAdmin: true
             }
         ];
-        saveUsers();
-    }
-    
-    // Check if user is already logged in (from previous session)
-    const loggedInUser = localStorage.getItem('currentUser');
-    if (loggedInUser) {
-        currentUser = JSON.parse(loggedInUser);
-        updateUIForLoggedInUser();
-    } else {
         showLoginForm();
     }
 }
 
 /**
  * Save users array to localStorage
+ * @returns {boolean} Success status of the save operation
  */
 function saveUsers() {
-    localStorage.setItem('albionUsers', JSON.stringify(users));
+    try {
+        localStorage.setItem('albionUsers', JSON.stringify(users));
+        return true;
+    } catch (err) {
+        console.error('Error saving users to localStorage:', err);
+        return false;
+    }
+}
+
+/**
+ * Simple password hashing for demo purposes
+ * NOTE: This is NOT secure for production! Use a proper hashing library like bcrypt in production
+ * @param {string} password - Plain text password
+ * @returns {string} Hashed password
+ */
+function hashPassword(password) {
+    // This is a simple hash for demonstration only
+    // DO NOT use this in production!
+    let hash = 0;
+    for (let i = 0; i < password.length; i++) {
+        const char = password.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString(36) + Date.now().toString(36);
 }
 
 /**
@@ -64,17 +111,40 @@ function saveUsers() {
  * @returns {Object} Object with success flag and message
  */
 function registerUser(username, password, isAdmin = false) {
+    // Input validation
+    if (!username || username.trim() === '') {
+        return { success: false, message: 'Username cannot be empty' };
+    }
+    
+    if (!password || password.length < 6) {
+        return { success: false, message: 'Password must be at least 6 characters' };
+    }
+    
     // Check if username already exists
-    if (users.some(user => user.username === username)) {
+    if (users.some(user => user.username.toLowerCase() === username.toLowerCase())) {
         return { success: false, message: 'Username already exists' };
     }
     
-    // Create new user
-    const newUser = { username, password, isAdmin };
-    users.push(newUser);
-    saveUsers();
-    
-    return { success: true, message: 'Registration successful!' };
+    try {
+        // Create new user with hashed password
+        const newUser = { 
+            username: username.trim(), 
+            password: hashPassword(password),
+            isAdmin: isAdmin,
+            dateCreated: new Date().toISOString()
+        };
+        users.push(newUser);
+        
+        if (saveUsers()) {
+            console.log(`User registered successfully: ${username}`);
+            return { success: true, message: 'Registration successful!' };
+        } else {
+            return { success: false, message: 'Failed to save user data. Please try again.' };
+        }
+    } catch (err) {
+        console.error('Error during user registration:', err);
+        return { success: false, message: 'An error occurred during registration. Please try again.' };
+    }
 }
 
 /**
@@ -85,14 +155,39 @@ function registerUser(username, password, isAdmin = false) {
  * @returns {Object} Object containing success flag and user data or error message
  */
 function loginUser(username, password) {
-    const user = users.find(u => u.username === username && u.password === password);
+    if (!username || !password) {
+        return { success: false, message: 'Username and password are required' };
+    }
     
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        return { success: true, user };
-    } else {
+    try {
+        // For the demo version with hashed passwords
+        const user = users.find(u => 
+            u.username.toLowerCase() === username.toLowerCase()
+        );
+        
+        if (user) {
+            // For backward compatibility with existing accounts
+            // This allows login with plain text passwords for existing accounts
+            const isLegacyMatch = user.password === password;
+            const isHashMatch = user.password === hashPassword(password);
+            
+            if (isLegacyMatch || isHashMatch) {
+                currentUser = user;
+                try {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    console.log(`User logged in: ${username}`);
+                    return { success: true, user };
+                } catch (err) {
+                    console.error('Error saving current user to localStorage:', err);
+                    return { success: false, message: 'Failed to save login session. Please try again.' };
+                }
+            }
+        }
+        
         return { success: false, message: 'Invalid username or password' };
+    } catch (err) {
+        console.error('Error during login:', err);
+        return { success: false, message: 'An error occurred during login. Please try again.' };
     }
 }
 
@@ -101,8 +196,16 @@ function loginUser(username, password) {
  * Clears user data from memory and localStorage
  */
 function logoutUser() {
-    currentUser = null;
-    localStorage.removeItem('currentUser');
+    try {
+        const username = currentUser?.username;
+        currentUser = null;
+        localStorage.removeItem('currentUser');
+        console.log(`User logged out: ${username}`);
+        return true;
+    } catch (err) {
+        console.error('Error during logout:', err);
+        return false;
+    }
 }
 
 /**
@@ -164,8 +267,15 @@ function updateUIForLoggedInUser() {
  * Hides registration form and displays login form
  */
 function showLoginForm() {
-    document.getElementById('login-form').style.display = 'block';
-    document.getElementById('register-form').style.display = 'none';
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    
+    if (loginForm && registerForm) {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+    } else {
+        console.error('Login/register forms not found in the DOM');
+    }
 }
 
 /**
@@ -173,6 +283,82 @@ function showLoginForm() {
  * Hides login form and displays registration form
  */
 function showRegisterForm() {
-    document.getElementById('login-form').style.display = 'none';
-    document.getElementById('register-form').style.display = 'block';
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    
+    if (loginForm && registerForm) {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+    } else {
+        console.error('Login/register forms not found in the DOM');
+    }
+}
+
+/**
+ * Setup authentication form listeners
+ * Handles form submissions and switching between login/register views
+ */
+function setupAuthListeners() {
+    // Login form submission
+    document.getElementById('form-login').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        
+        const result = loginUser(username, password);
+        
+        if (result.success) {
+            updateUIForLoggedInUser();
+        } else {
+            const errorElement = document.getElementById('login-error');
+            errorElement.textContent = result.message;
+            errorElement.classList.remove('hidden');
+        }
+    });
+    
+    // Registration form submission
+    document.getElementById('form-register').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+        const confirmPassword = document.getElementById('register-confirm-password').value;
+        
+        const errorElement = document.getElementById('register-error');
+        
+        if (password !== confirmPassword) {
+            errorElement.textContent = "Passwords don't match";
+            errorElement.classList.remove('hidden');
+            return;
+        }
+        
+        const result = registerUser(username, password);
+        
+        if (result.success) {
+            // Show success message and switch to login
+            showNotification('Registration successful! You can now log in.', 'success');
+            showLoginForm();
+        } else {
+            errorElement.textContent = result.message;
+            errorElement.classList.remove('hidden');
+        }
+    });
+    
+    // Switch between login and register forms
+    const showRegisterLink = document.getElementById('show-register-link');
+    if (showRegisterLink) {
+        showRegisterLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            showRegisterForm();
+        });
+    }
+    
+    const showLoginLink = document.getElementById('show-login-link');
+    if (showLoginLink) {
+        showLoginLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLoginForm();
+        });
+    }
 }

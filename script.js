@@ -6,7 +6,7 @@
  * timeframe, and tags.
  * 
  * @author Your Name
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 // DOM Elements
@@ -86,15 +86,29 @@ function init() {
  * This retrieves stored goals or initializes with empty structure
  */
 function loadGoals() {
-    const savedGoals = localStorage.getItem('albionGoals');
-    if (savedGoals) {
-        goals = JSON.parse(savedGoals);
+    try {
+        const savedGoals = localStorage.getItem('albionGoals');
+        if (savedGoals) {
+            try {
+                const parsedGoals = JSON.parse(savedGoals);
+                goals = parsedGoals;
+                console.log('Goals loaded from localStorage');
+            } catch (parseError) {
+                console.error('Error parsing goals from localStorage:', parseError);
+                // Use default empty goals structure
+                console.log('Using default empty goals structure');
+            }
+        }
+        
+        // Extract all unique tags from goals
+        updateAvailableTags();
+        
+        renderAllGoals();
+    } catch (err) {
+        console.error('Error loading goals:', err);
+        // Show error notification to user
+        showNotification('Failed to load goals. Some functionality might be limited.', 'error');
     }
-    
-    // Extract all unique tags from goals
-    updateAvailableTags();
-    
-    renderAllGoals();
 }
 
 /**
@@ -143,75 +157,117 @@ function updateTagAutocomplete() {
 }
 
 /**
- * Save goals to localStorage
+ * Check if localStorage is available and working
+ * @returns {boolean} True if localStorage is working
  */
-function saveGoals() {
-    localStorage.setItem('albionGoals', JSON.stringify(goals));
-    
-    // Update available tags after saving
-    updateAvailableTags();
+function isStorageAvailable() {
+    try {
+        const test = 'test';
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+    } catch(e) {
+        showNotification('Local storage is not available. Your data will not be saved between sessions.', 'error');
+        return false;
+    }
 }
 
 /**
- * Set up authentication form listeners
+ * Save goals to localStorage
+ * @returns {boolean} Success status of the save operation
  */
-function setupAuthListeners() {
-    // Login form submission
-    document.getElementById('form-login').addEventListener('submit', function(e) {
-        e.preventDefault();
+function saveGoals() {
+    try {
+        if (!isStorageAvailable()) return false;
         
-        const username = document.getElementById('login-username').value;
-        const password = document.getElementById('login-password').value;
+        const goalsString = JSON.stringify(goals);
+        // Check for quota exceeded error
+        if (goalsString.length * 2 > 5000000) { // ~5MB limit
+            showNotification('Storage limit approaching. Consider exporting your data.', 'warning');
+        }
         
-        const result = loginUser(username, password);
+        localStorage.setItem('albionGoals', goalsString);
         
-        if (result.success) {
-            updateUIForLoggedInUser();
+        // Update available tags after saving
+        updateAvailableTags();
+        return true;
+    } catch (err) {
+        console.error('Error saving goals:', err);
+        
+        if (err.name === 'QuotaExceededError' || err.code === 22) {
+            showNotification('Storage limit reached! Could not save changes. Try deleting some old goals.', 'error');
         } else {
-            const errorElement = document.getElementById('login-error');
-            errorElement.textContent = result.message;
-            errorElement.classList.remove('hidden');
+            showNotification('Failed to save goal data. Please try again.', 'error');
         }
+        return false;
+    }
+}
+
+/**
+ * Display a notification message to the user
+ * @param {string} message - The message to display
+ * @param {string} type - The type of notification ('success', 'error', 'info')
+ */
+function showNotification(message, type = 'info') {
+    // Check if notification container exists, create if not
+    let notificationContainer = document.getElementById('notification-container');
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'notification-container';
+        notificationContainer.className = 'fixed top-4 right-4 z-50 max-w-md';
+        document.body.appendChild(notificationContainer);
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    
+    // Set appropriate class based on notification type
+    let bgColor, textColor;
+    switch(type) {
+        case 'success':
+            bgColor = 'bg-green-100 border-green-500';
+            textColor = 'text-green-800';
+            break;
+        case 'error':
+            bgColor = 'bg-red-100 border-red-500';
+            textColor = 'text-red-800';
+            break;
+        default: // info
+            bgColor = 'bg-blue-100 border-blue-500';
+            textColor = 'text-blue-800';
+    }
+    
+    notification.className = `mb-3 p-4 rounded shadow-lg transition-all duration-300 ${bgColor} ${textColor} border-l-4`;
+    notification.innerHTML = `
+        <div class="flex justify-between items-start">
+            <div>${message}</div>
+            <button class="text-gray-500 hover:text-gray-700 ml-4">&times;</button>
+        </div>
+    `;
+    
+    // Add to container
+    notificationContainer.appendChild(notification);
+    
+    // Add close button handler
+    const closeBtn = notification.querySelector('button');
+    closeBtn.addEventListener('click', () => {
+        notification.classList.add('opacity-0');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
     });
     
-    // Registration form submission
-    document.getElementById('form-register').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('register-username').value;
-        const password = document.getElementById('register-password').value;
-        const confirmPassword = document.getElementById('register-confirm-password').value;
-        
-        const errorElement = document.getElementById('register-error');
-        
-        if (password !== confirmPassword) {
-            errorElement.textContent = "Passwords don't match";
-            errorElement.classList.remove('hidden');
-            return;
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.classList.add('opacity-0');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
         }
-        
-        const result = registerUser(username, password);
-        
-        if (result.success) {
-            // Show success message and switch to login
-            alert('Registration successful! You can now log in.');
-            showLoginForm();
-        } else {
-            errorElement.textContent = result.message;
-            errorElement.classList.remove('hidden');
-        }
-    });
-    
-    // Switch between login and register forms
-    document.getElementById('show-register-link').addEventListener('click', function(e) {
-        e.preventDefault();
-        showRegisterForm();
-    });
-    
-    document.getElementById('show-login-link').addEventListener('click', function(e) {
-        e.preventDefault();
-        showLoginForm();
-    });
+    }, 5000);
 }
 
 /**
@@ -269,8 +325,8 @@ function setupTabSwitching() {
                 
                 // Show corresponding content with a smooth transition
                 const contentElements = document.querySelectorAll(`#${section} .timeframe-content`);
+                // First add hidden class
                 contentElements.forEach(content => {
-                    // First add hidden class
                     content.classList.add('hidden');
                     content.classList.remove('active');
                     
@@ -406,7 +462,7 @@ function filterGoalsByTag(section, tag) {
     const filterInput = document.getElementById(`${section}-tag-filter`);
     filterInput.value = tag;
     
-    // Store active filter
+    // Store active filter 
     document.getElementById(section).setAttribute('data-filter', tag);
     
     // Add filtered class to the section
@@ -414,7 +470,6 @@ function filterGoalsByTag(section, tag) {
     
     // Show only goals with matching tag
     const allGoalRows = document.querySelectorAll(`#${section} .goal-row`);
-    
     allGoalRows.forEach(row => {
         const goalTags = row.getAttribute('data-tags')?.split(',') || [];
         
@@ -487,8 +542,8 @@ function renderGoals(section, timeframe) {
     const tableBody = document.querySelector(`#${section}-${timeframe} table tbody`);
     tableBody.innerHTML = '';
     
+    // Show a message if no goals exist
     if (goals[section][timeframe].length === 0) {
-        // Show a message if no goals exist
         const emptyRow = document.createElement('tr');
         emptyRow.innerHTML = `
             <td colspan="4" style="text-align: center;">No goals added yet</td>
@@ -527,11 +582,9 @@ function renderGoals(section, timeframe) {
             : '';
         
         row.innerHTML = `
-            <td>
-                ${goal.description}
-                ${tagsHtml}
-            </td>
+            <td>${goal.description}</td>
             <td>${formattedDate}</td>
+            <td>${tagsHtml}</td>
             <td>
                 <button class="action-btn delete-btn ${!isAdmin() ? 'hidden' : ''}" 
                         data-id="${goal.id}" 

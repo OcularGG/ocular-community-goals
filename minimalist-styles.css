@@ -265,6 +265,55 @@ input[type="password"]:focus, select:focus {
   outline: none;
 }
 
+/* Add these styles for notifications and form errors */
+
+/* Notification styles */
+#notification-container {
+  pointer-events: none;
+  max-width: 24rem;
+}
+
+#notification-container > div {
+  pointer-events: auto;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Form validation styles */
+input.error, select.error, textarea.error {
+  border-color: #e53e3e;
+  background-color: #fff5f5;
+}
+
+input.error:focus, select.error:focus, textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
+
+.form-error {
+  color: #e53e3e;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Improved focus styles for better accessibility */
+input:focus, select:focus, textarea:focus, button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(13, 139, 232, 0.25);
+}
+
+/* Style for empty state messages */
+.empty-state {
+  text-align: center;
+  padding: 2rem 0;
+  color: #6b7280;
+}
+
+.empty-state p {
+  margin-bottom: 1rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .tab-btn {
