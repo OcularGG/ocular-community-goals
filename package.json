@@ -1,0 +1,16 @@
+{
+  "name": "ocular-community-goals",
+  "version": "1.0.0",
+  "description": "Albion Online Goal Tracker",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve",
+    "dev": "npx serve",
+    "test": "echo \"No tests specified\""
+  },
+  "author": "",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "serve": "^14.0.0"
+  }
+}
